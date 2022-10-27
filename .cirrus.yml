@@ -1,33 +1,32 @@
 env:
-    credentials: "ENCRYPTED[4526be3acf95a0d69e63c2024f61eacc9becd1b166eb4c671a0f62030a7927284dab21b9a07ba52c425948ff430e8727]"
-    rcloneconfig: "ENCRYPTED[81f2ea42a1bb72f5514f01604e25bb9057eb0b6f1b0f5a18434dd7175df07619a880e75ecb9597e10e69fba44553fe84]"
-    tokentl: "ENCRYPTED[635e0f6a0eba8b826946060570abec570da283211dd3be25ba50ff895855fd6f35aa1181acdbbb20ec3331f16cde6bbd]"
-    idtl: "ENCRYPTED[34e83ce99a26a43722c25a9237e72beb606357204ef3029e5fe641f449ebd90db2ae3b7a2676bf686c62ffa9606f48db]"
-    lunch: lunch nad_juice-userdebug
-    make: make nad
+    #credentials: "ENCRYPTED[4526be3acf95a0d69e63c2024f61eacc9becd1b166eb4c671a0f62030a7927284dab21b9a07ba52c425948ff430e8727]"
+    rcloneconfig: "ENCRYPTED[!390d791dd32ae0cc42171f088429ceada42eeb11f9944728b33bfa206d45fd69488c8bb6770613806af5c34d0573becd!]"
+    tokentl: "ENCRYPTED[!61abce6a505144c849b5aeff0f386ff5e305f7e6ec0ecc10c8f6b8f7df2a2aa75026dac72f322fb471f66cc8c0e360a8!]"
+    idtl: "ENCRYPTED[!0471e8c4263c8fe122aa4bf50f3320c998ee0449343e74d8fb7df2ae7635128a9163aff08fa4bb0175c75ca662b7d865!]"
+    lunch: lunch calyx_sweet-user
+    make: m
 
 task:
   name: "Setting Up, Syncing, Building and Uploading..."
   timeout_in: 480m  
   container:
       image: inok2341/anu:latest
-      cpu: 8
-      memory: 32G
+      cpu: 44
+      memory: 176G
         
   Build-Env-Setup_background_script:
        - curl -s https://api.telegram.org/$tokentl/sendMessage -d chat_id=$idtl -d text="Setup Build"
-       - export DEBIAN_FRONTEND=noninteractive
        - mkdir -p ~/.config/rclone
-       - echo "$rcloneconfig" > ~/.rclone.conf
-       - git config --global user.name "I-n-o-k"
-       - git config --global user.email "inok.dr189@gmail.com"
-       - echo "$credentials" > ~/.git-credentials
-       - git config --global credential.helper store --file=~/.git-credentials
-       - mkdir -p ~/ccache
-       - rclone copy inok:nad/ccache.tar.gz ~/ -P
-       - cd ~/
-       - time tar xf ccache.tar.gz
-       - cd ~/
+       - echo "$rcloneconfig" > ~/.config/rclone/rclone.conf
+       - DEBIAN_FRONTEND=noninteractive
+       - git config --global user.name "phoenix8870"
+       - git config --global user.email "harigphotos1708@gmail.com"
+       - git config --global color.ui true
+       - mkdir -p /tmp/ccache
+       #- rclone copy inok:nusantara/ccache.tar.gz /tmp -P
+       - cd /tmp
+       #- time tar xf ccache.tar.gz
+       - cd /tmp
   
   Storage-Checker_background_script:
       - df -h
@@ -42,9 +41,15 @@ task:
       - curl -s https://api.telegram.org/$tokentl/sendMessage -d chat_id=$idtl -d text="Start sync Source"
       - mkdir -p ~/rom
       - cd ~/rom
-      - repo init -q --no-repo-verify --depth=1 -u https://github.com/NusantaraProject-ROM/android_manifest -b 12 -g default,-mips,-darwin,-notdefault
-#      - git clone https://github.com/I-n-o-k/local_manifest --depth 1 -b 12 .repo/local_manifests
+      - repo init --depth=1 --no-repo-verify -u https://gitlab.com/CalyxOS/platform_manifest -b android13 -g default,-mips,-darwin,-notdefault
       - repo sync -c --no-clone-bundle --no-tags --optimized-fetch --prune --force-sync -j 30 || repo sync -c --no-clone-bundle --no-tags --optimized-fetch --prune --force-sync -j 8
+      
+      # DT/VT/KT/TC
+      - git clone https://github.com/phoenix-1708/device_xiaomi_sweet -b calyx --depth=1 device/xiaomi/sweet
+      - git clone https://github.com/phoenix-1708/vendor_xiaomi_sweet -b main --depth=1 vendor/xiaomi/sweet
+      - git clone https://github.com/olhotorto/kernel_xiaomi_sweet -b dev/13 --depth=1 kernel/xiaomi/sweet
+      - git clone https://github.com/kdrag0n/proton-clang -b master --depth=1 prebuilts/clang/host/linux-x86/clang-proton
+      - cp kernel/xiaomi/sweet/arch/arm64/configs/sweet_defconfig kernel/xiaomi/sweet/arch/arm64/configs/sweet_user_defconfig
       - curl -s https://api.telegram.org/$tokentl/sendMessage -d chat_id=$idtl -d text="Sync Completed!"
       - echo "============================"
       - echo "Sync Completed!"
@@ -56,7 +61,7 @@ task:
       - echo "============================"
 #      - ./collect.sh
       - ./final.sh
-      - curl -s https://api.telegram.org/$tokentl/sendMessage -d chat_id=$idtl -d text="Build $(cd /tmp/rom/out/target/product/juice/ && ls Nusantara*.zip) Completed!"
+      - curl -s https://api.telegram.org/$tokentl/sendMessage -d chat_id=$idtl -d text="Build $(cd /tmp/rom/out/target/product/sweet/ && ls calyx*.zip) Completed!"
       - echo "============================"
       - echo "Build Completed!"
       - echo "============================"
@@ -65,15 +70,15 @@ task:
       - echo "============================"
       - echo "Uploading the Build...."
       - echo "============================"
-      - curl -s https://api.telegram.org/$tokentl/sendMessage -d chat_id=$idtl -d text="Uploading Build $(cd ~/rom/out/target/product/juice/ && ls Nusantara*.zip)"
-#      - rclone copy ~/rom/out/target/product/juice/Nusantara*.zip inok:juice -P
-      - curl -s https://api.telegram.org/$tokentl/sendMessage -d chat_id=$idtl -d text="Build $(cd ~/rom/out/target/product/juice/ && ls Nusantara*.zip) Uploaded Successfully!"
-      - curl -s https://api.telegram.org/$tokentl/sendMessage -d chat_id=$idtl -d text="Download link http://anu.inok189.workers.dev/juice/$(cd ~/rom/out/target/product/juice/ && ls Nusantara*.zip)"
-      - curl -s https://api.telegram.org/$tokentl/sendMessage -d chat_id=$idtl -d text="Compres ccache"
+      - curl -s https://api.telegram.org/$tokentl/sendMessage -d chat_id=$idtl -d text="Uploading Build $(cd ~/rom/out/target/product/sweet/ && ls calyx*.zip)"
+      - rclone copy ~/rom/out/target/product/sweet/calyx*.zip remote:sweet -P
+      - curl -s https://api.telegram.org/$tokentl/sendMessage -d chat_id=$idtl -d text="Build $(cd ~/rom/out/target/product/sweet/ && ls calyx*.zip) Uploaded Successfully!"
+      #- curl -s https://api.telegram.org/$tokentl/sendMessage -d chat_id=$idtl -d text="Download link http://anu.inok189.workers.dev/sweet/$(cd ~/rom/out/target/product/sweet/ && ls Nusantara*.zip)"
+      - curl -s https://api.telegram.org/$tokentl/sendMessage -d chat_id=$idtl -d text="Compress ccache"
       - ./ziping.sh
       - cd ~/
       - curl -s https://api.telegram.org/$tokentl/sendMessage -d chat_id=$idtl -d text="Uploading ccache...."
-      - rclone copy ccache.tar.gz inok:nad -P
+      - rclone copy ccache.tar.gz remote:ccache/ci2 -P
       - echo " "
       - echo "============================"
       - echo "Build Uploaded Successfully!"
